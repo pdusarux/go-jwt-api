@@ -3,7 +3,10 @@ package main
 import (
 	"net/http"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
+	_ "golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -33,6 +36,7 @@ func main() {
 	db.AutoMigrate(&User{})
 
 	r := gin.Default()
+	r.Use(cors.Default())
 
 	r.POST("/register", func(c *gin.Context) {
 		var json Register
@@ -42,8 +46,16 @@ func main() {
 			})
 			return
 		}
+		encryptedPassword, err := bcrypt.GenerateFromPassword([]byte(json.Password), 10)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+		}
+
 		c.JSON(http.StatusOK, gin.H{
-			"register": json,
+			"register":          json,
+			"encryptedPassword": encryptedPassword,
 		})
 	})
 
