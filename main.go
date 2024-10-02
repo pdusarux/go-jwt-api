@@ -1,19 +1,29 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 
 	"github.com/pdusarux/go-jwt-api/controller/auth"
 	"github.com/pdusarux/go-jwt-api/orm"
 )
 
 func main() {
-	r := gin.Default()
-	r.Use(cors.Default())
+	err := godotenv.Load(".env")
+	if err != nil {
+		fmt.Println("Error loading .env file")
+	}
+
 	orm.InitDB()
 
+	r := gin.Default()
+	r.Use(cors.Default())
+
 	r.POST("/register", auth.Register)
+	r.POST("/login", auth.Login)
 
 	r.Run(":8000")
 }

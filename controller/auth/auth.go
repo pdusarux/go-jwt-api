@@ -1,12 +1,17 @@
 package auth
 
 import (
+	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt"
 	"github.com/pdusarux/go-jwt-api/orm"
 	"golang.org/x/crypto/bcrypt"
 )
+
+var hmacSampleSecret []byte
 
 type RegisterBody struct {
 	Username string `json:"username" binding:"required"`
@@ -53,5 +58,46 @@ func Register(c *gin.Context) {
 	} else {
 		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "User Create Failed"})
 	}
+
+}
+
+type LoginBody struct {
+	Username string `json:"username" binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
+
+func Login(c *gin.Context) {
+	var json LoginBody
+	if err := c.ShouldBindJSON(&json); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"err": err.Error(),
+		})
+		return
+	}
+
+	var userExist orm.User
+	orm.Db.Where("username = ?", json.Username).First(&userExist)
+	if userExist.ID == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "User Does Not Exists"})
+		return
+	}
+
+	err := bcrypt.CompareHashAndPassword([]byte(userExist.Password), []byte(json.Password))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Login Failed"})
+		return
+	}
+
+	hmacSampleSecret = []byte(os.Getenv("JWT_SECRET_KEY"))
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"userId": userExist.ID,
+	})
+	tokenString, err := token.SignedString(hmacSampleSecret)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Token is wrong"})
+		return
+	}
+	fmt.Println(tokenString, err)
+	c.JSON(http.StatusOK, gin.H{"status": "ok", "message": "Login Success", "token": tokenString})
 
 }
