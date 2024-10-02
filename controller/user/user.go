@@ -16,3 +16,14 @@ func ReadAll(c *gin.Context) {
 		"users":   users,
 	})
 }
+
+func Profile(c *gin.Context) {
+	userId := c.MustGet("userId").(float64)
+	var user orm.User
+	orm.Db.Find(&user, userId)
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "ok",
+		"message": "Profile Read Success",
+		"profile": user,
+	})
+}

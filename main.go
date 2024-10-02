@@ -29,6 +29,7 @@ func main() {
 
 	authorized := r.Group("/users", middleware.JWTAuthen())
 	authorized.GET("/readall", user.ReadAll)
+	authorized.GET("/profile", user.Profile)
 
 	r.Run(":8000")
 }
