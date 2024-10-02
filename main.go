@@ -8,6 +8,7 @@ import (
 	"github.com/joho/godotenv"
 
 	"github.com/pdusarux/go-jwt-api/controller/auth"
+	"github.com/pdusarux/go-jwt-api/controller/user"
 	"github.com/pdusarux/go-jwt-api/orm"
 )
 
@@ -24,6 +25,7 @@ func main() {
 
 	r.POST("/register", auth.Register)
 	r.POST("/login", auth.Login)
+	r.GET("/users/readall", user.ReadAll)
 
 	r.Run(":8000")
 }
